@@ -1,0 +1,1 @@
+cls && gcc -I. -DGLEW_STATIC main.c graphics.c matrix4.c serial.c glew/glew.c rs232/rs232-win.c glfw/libglfw3.a -lopengl32 -lgdi32 && a.exe
