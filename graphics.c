@@ -90,8 +90,8 @@ GLuint initShaders(void)
 	if(!success){
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 		printf("Error in vertex shader compilation\n");
-		printf(infoLog);
-		exit(0);
+		printf("%s", infoLog);
+		exit(EXIT_FAILURE);
 	}
 	
 	GLuint fragmentShader;
@@ -103,8 +103,8 @@ GLuint initShaders(void)
 	if(!success) {
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
 		printf("Error in fragment shader compilation\n");
-		printf(infoLog);
-		exit(0);
+		printf("%s", infoLog);
+		exit(EXIT_FAILURE);
 	}
 	
 	GLuint shaderProgram;
@@ -117,11 +117,9 @@ GLuint initShaders(void)
 	if(!success) {
 		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
 		printf("Error in shader linking\n");
-		printf(infoLog);
-		exit(0);
+		printf("%s", infoLog);
+		exit(EXIT_FAILURE);
 	}
-	
-	printf("Shaders successfully compiled.\n");
 	
 	cubeModelUni = glGetUniformLocation(shaderProgram, "modelMatrix");
 	cubeProjUni = glGetUniformLocation(shaderProgram, "projMatrix");

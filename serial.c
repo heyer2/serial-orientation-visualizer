@@ -85,7 +85,47 @@ int stringIsEqual(char* str1, char* str2)
 	return 1;
 }
 
-void serialStart(struct serialPort* serial) {
+void serialStartArgs(struct serialPort* serial, char** argv)
+{
+	if (stringIsEqual(argv[0], "HPR"))
+		serial->representation = HPR;
+	else if (stringIsEqual(argv[0], "matrix"))
+		serial->representation = matrix;
+	else {
+		fputs("Unknown representation.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	int baud;
+	if (stringIsNumeric(argv[1]))
+		baud = string2Int(argv[1]);
+	else {
+		fputs("Non-numeric baud rate.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	comEnumerate();
+	int index = comFindPort(argv[2]);
+	int status;
+	
+	if (index != -1)
+		status = comOpen(index, baud);
+	else {
+		fputs("Invalid port name.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	
+	if (status == 0) {
+		fputs("Port not available.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	serial->lineIdx = 0;
+	serial->writeIdx = 0;
+	serial->readIdx = 0;
+	serial->portIndex = index;
+	printf("Port ready for use.\n");
+}
+
+void serialStartManual(struct serialPort* serial) {
 	char* input;
 	int status = -1;
 	
@@ -131,7 +171,7 @@ void serialStart(struct serialPort* serial) {
 	serial->lineIdx = 0;
 	serial->writeIdx = 0;
 	serial->readIdx = 0;
-	printf("Port ready for use\n");
+	printf("Port ready for use.\n");
 }
 
 void serialIncrementReadIdx(struct serialPort* serial)
@@ -157,7 +197,7 @@ void serialIncrementLineIdx(struct serialPort* serial)
 	if (serial->lineIdx < SERIAL_BUFFER_SIZE - 1)
 		serial->lineIdx++;
 	else
-		fputs("Received too long line!", stderr);
+		fputs("Received too long line.\n", stderr);
 }
 
 int serialUpdateBuffer(struct serialPort* serial)
@@ -210,10 +250,10 @@ int serialUpdataOrientation(struct serialPort* serial, struct mat4* outputMatrix
 			break;
 		}
 		case undef : 
-			fputs("Cannot update orientation using serial object with undefined representation!", stderr);
+			fputs("Error: Cannot update orientation using serial object with undefined representation.\n", stderr);
 			break;
 		default : 
-			fputs("Switch statement fall through error!", stderr);
+			fputs("Error: Switch statement fall through error.\n", stderr);
 	}	
 	return(0);
 }

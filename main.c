@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "glew/glew.h"
 #include "glfw/glfw3.h"
 #include "headers/serial.h"
@@ -20,12 +21,18 @@ double cubeScaleX = 1;
 double cubeScaleY = 1;
 double cubeScaleZ = 1;
 
-// Simple matrix stuff
-
+void SIGINT_handler(int sig)
+{
+	signal(sig, SIG_IGN);
+	glfwTerminate();
+	serialEnd();
+	printf("\nVisualization aborted.\n");
+	exit(0);
+}
 
 void error_callback(int error, const char* description)
 {
-    fputs("GLFW related error!", stderr);
+    fputs("GLFW related error.\n", stderr);
 }
 
 void close_callback(GLFWwindow* window)
@@ -89,31 +96,49 @@ void setCallbacks(GLFWwindow* window) {
 	glfwSetWindowSizeCallback(window, window_size_callback);
 }
 
-
-int main()
-{	
-	//printf("%i",comEnumerate());
-	struct serialPort serialPort1;
-	serialStart(&serialPort1);
-	
-    if (!glfwInit())
-        exit(EXIT_FAILURE);
+GLFWwindow* initWindow(void) {
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_REFRESH_RATE, 60); // SHOULD REMOVE?
 	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Orientation Visualizer", NULL, NULL);
 	setCallbacks(window);
  	
 	int bufferWidth, bufferHeight;
 	glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1); //DANGER?
 	glViewport(0, 0, bufferWidth,bufferHeight);
-	
 	glewExperimental = GL_TRUE;
 	glewInit();	
+	
 	graphicsInit();
+	
+	return window;
+}
+
+int main(int argc, char** argv)
+{	
+
+	signal(SIGINT, SIGINT_handler);
+	struct serialPort serialPort1;
+	
+	if (argc == 4) {
+		serialStartArgs(&serialPort1, argv + 1);
+	}
+	else if (argc == 1) {
+		serialStartManual(&serialPort1);
+	}
+	else {
+		fputs("Error: Incorrect number of arguments.\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	
+    if (!glfwInit())
+        exit(EXIT_FAILURE);
+	GLFWwindow* window = initWindow();
 	
 	struct mat4 serialMatrix;
 	struct mat4 guiMatrix;
@@ -121,9 +146,6 @@ int main()
 	struct mat4 scalingMatrix;
 	
 	mat4Perspective(&graphicsProjectionMatrix, 1, 5, 1, 1);
-	//mat4Disp(&graphicsProjectionMatrix, "projection matrix init");
-	//printf("%i\n", comEnumerate());
-	
 	
 	mat4Init(&serialMatrix);
 	mat4Init(&guiMatrix);
@@ -133,14 +155,11 @@ int main()
 	mat4SetScaling(&scalingMatrix, cubeScaleX, cubeScaleY, cubeScaleZ);
 	
 	printf("Read: %i, write: %i, line: %i\n", serialPort1.readIdx, serialPort1.writeIdx, serialPort1.lineIdx);
-	//mat4Disp(&modelMatrix, "model matrix");
-	
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
-		//printf("%i\n", serialUpdateBuffer(&serialPort1));
 		serialUpdateBuffer(&serialPort1);
-		//printf("%i\n", test);
 		
 		printf("Read idx: %i Write idx: %i \n", serialPort1.readIdx, serialPort1.writeIdx);
 		if (serialUpdataOrientation(&serialPort1, &serialMatrix))
@@ -155,6 +174,7 @@ int main()
 		graphicsDrawCube(&modelMatrix);		
 		glfwSwapBuffers(window);
 	}
+	
 	printf("Visualization finished.\n");
 	glfwTerminate();
 	serialClose(&serialPort1);

@@ -8,7 +8,7 @@
 
 struct serialPort {
 	int portIndex;
-	int baudrate;
+	int baudrate; // NOT REALLY USED??!?!?
 	int readIdx;
 	int writeIdx;
 	int lineIdx;
@@ -16,7 +16,8 @@ struct serialPort {
 	enum oriType {undef, HPR, matrix} representation;
 };
 
-void serialStart(struct serialPort* serial);
+void serialStartArgs(struct serialPort* serial, char** argv);
+void serialStartManual(struct serialPort* serial);
 int serialUpdateBuffer(struct serialPort* serial);
 int serialUpdataOrientation(struct serialPort* serial, struct mat4* outputMatrix);
 void serialClose(struct serialPort* serial);

@@ -43,7 +43,7 @@ void mat4Perspective(struct mat4* outputMatrix, double near, double far, double 
 
 void mat4Disp(struct mat4* inputMatrix, char const *const text)
 {	
-	printf(text);
+	printf("%s", text);
 	printf("\n");
 	for (int i = 1; i <= 80; i++)
 		printf("_");
