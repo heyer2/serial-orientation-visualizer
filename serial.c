@@ -9,18 +9,6 @@
 #define TMP_BUFFER_SIZE 2048
 
 
-
-/*
-void waitForEnter()
-{
-    printf("Please press \"Enter\" to continue...\n");
-    while (fgetc(stdin)!= '\n') {
-        fflush(stdin);
-        printf("Incorrect input. Kindly press \"Enter\" to continue...\n");
-    }
-}
-*/
-
 char* getInput()
 {
 	static char input[TERMINAL_BUFFER_SIZE];
@@ -241,11 +229,11 @@ int serialUpdataOrientation(struct serialPort* serial, struct mat4* outputMatrix
 			int spaces = stringCountSpaces(serial->buffer[serial->readIdx]);
 			int conforms = sscanf(serial->buffer[serial->readIdx], "%lf %lf %lf %lf %lf %lf %lf %lf %lf", &(rotMatrix.data[0][0]), &(rotMatrix.data[0][1]), &(rotMatrix.data[0][2]), &(rotMatrix.data[1][0]), &(rotMatrix.data[1][1]), &(rotMatrix.data[1][2]), &(rotMatrix.data[2][0]), &(rotMatrix.data[2][1]), &(rotMatrix.data[2][2]));
 			serialIncrementReadIdx(serial);
- 			printf("Conforms: %i Spaces: %i\n", conforms, spaces);
+ 			//printf("Conforms: %i Spaces: %i\n", conforms, spaces);
 			if (spaces > 10 || conforms != 9)
 				return 0;
 			mat4SetRotFromMat(outputMatrix, &rotMatrix);
-			printf("Successfully set rot\n");
+			//printf("Successfully set rot\n");
 			return 1;
 			break;
 		}

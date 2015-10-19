@@ -102,14 +102,14 @@ GLFWwindow* initWindow(void) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_REFRESH_RATE, 60); // SHOULD REMOVE?
+	glfwWindowHint(GLFW_REFRESH_RATE, 200); // SHOULD REMOVE?
 	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Orientation Visualizer", NULL, NULL);
 	setCallbacks(window);
  	
 	int bufferWidth, bufferHeight;
 	glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1); //DANGER?
+	//glfwSwapInterval(1); //DANGER?
 	glViewport(0, 0, bufferWidth,bufferHeight);
 	glewExperimental = GL_TRUE;
 	glewInit();	
@@ -156,23 +156,33 @@ int main(int argc, char** argv)
 	
 	printf("Read: %i, write: %i, line: %i\n", serialPort1.readIdx, serialPort1.writeIdx, serialPort1.lineIdx);
 
+	double packetTime = glfwGetTime();
+	double frameTime = 	glfwGetTime();
+	double avgPacketTime = 10000;;
+	int updated;
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
+		if (updated) {
+		printf("Frequency: %f\n", 1 / avgPacketTime);
+		avgPacketTime = avgPacketTime * 0.95 + (glfwGetTime() - packetTime) * 0.05;
+		packetTime = glfwGetTime();
+		}
+
 		serialUpdateBuffer(&serialPort1);
-		
-		printf("Read idx: %i Write idx: %i \n", serialPort1.readIdx, serialPort1.writeIdx);
-		if (serialUpdataOrientation(&serialPort1, &serialMatrix))
-			printf("Received data.\n");
+		updated = serialUpdataOrientation(&serialPort1, &serialMatrix);
 		mat4SetRotFromHPR(&guiMatrix, cubeHeading, 0, 0);
 		mat4SetTranslation(&guiMatrix, cubeProximity, 0, 0);
 		
 		mat4Mult(&serialMatrix, &scalingMatrix, &modelMatrix);
 		mat4Mult(&guiMatrix, &modelMatrix, &modelMatrix);
 		
-			
-		graphicsDrawCube(&modelMatrix);		
-		glfwSwapBuffers(window);
+		if (glfwGetTime() - frameTime > 1.0f / 60) {
+			graphicsDrawCube(&modelMatrix);		
+			glfwSwapBuffers(window);
+			frameTime = glfwGetTime();
+		}
 	}
 	
 	printf("Visualization finished.\n");
