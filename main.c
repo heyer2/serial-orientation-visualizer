@@ -165,13 +165,13 @@ int main(int argc, char** argv)
 		glfwPollEvents();
 
 		if (updated) {
-		printf("Frequency: %f\n", 1 / avgPacketTime);
-		avgPacketTime = avgPacketTime * 0.95 + (glfwGetTime() - packetTime) * 0.05;
-		packetTime = glfwGetTime();
+			printf("Frequency: %f\n", 1 / avgPacketTime);
+			avgPacketTime = avgPacketTime * 0.95 + (glfwGetTime() - packetTime) * 0.05;
+			packetTime = glfwGetTime();
 		}
 
-		serialUpdateBuffer(&serialPort1);
-		updated = serialUpdataOrientation(&serialPort1, &serialMatrix);
+		updated = serialUpdateBuffer(&serialPort1);
+		serialUpdataOrientation(&serialPort1, &serialMatrix);
 		mat4SetRotFromHPR(&guiMatrix, cubeHeading, 0, 0);
 		mat4SetTranslation(&guiMatrix, cubeProximity, 0, 0);
 		

@@ -189,7 +189,8 @@ void serialIncrementLineIdx(struct serialPort* serial)
 }
 
 int serialUpdateBuffer(struct serialPort* serial)
-{
+{	
+	int incrementedLine = 0;
 	char tmpString[TMP_BUFFER_SIZE];
 	int readChars = comRead(serial->portIndex, tmpString, TMP_BUFFER_SIZE);
 	for (int i = 0; i < readChars; i++) {
@@ -197,12 +198,13 @@ int serialUpdateBuffer(struct serialPort* serial)
 			serial->buffer[serial->writeIdx][serial->lineIdx] = '\0';
 			serial->lineIdx = 0;
 			serialIncrementWriteIdx(serial);
+			incrementedLine++;
 		} else if (tmpString[i] != '\r') { 	
 			serial->buffer[serial->writeIdx][serial->lineIdx] = tmpString[i];
 			serialIncrementLineIdx(serial);
 		}
 	}
-	return readChars;
+	return incrementedLine;
 }
 
 
