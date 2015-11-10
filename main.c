@@ -1,193 +1,94 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include "glew/glew.h"
-#include "glfw/glfw3.h"
+#include <glew/glew.h>
+#include <glfw/glfw3.h>
 #include "headers/serial.h"
 #include "headers/graphics.h"
 #include "headers/matrix4.h"
+#include "headers/interface.h"
 
-#define WINDOW_WIDTH 500
-#define WINDOW_HEIGHT 500
+#define ERR_GLFW "Error: GLFW related error.\n"
+#define INFO_END "\nVisualization over.\n"
 
-#define PROXIMITY_STEPSIZE 0.5;
-#define HEADING_STEPSIZE (3.14159265359/16);
-#define SCALING_STEPSIZE 0.2;
 
-	
-double cubeProximity = -2;
-double cubeHeading = 0;
-double cubeScaleX = 1;
-double cubeScaleY = 1;
-double cubeScaleZ = 1;
+#define UPDATESPEED_PACKAGE 0.999
+#define UPDATESPEED_FRAME 0.99
 
-void SIGINT_handler(int sig)
+#define FRAMERATE_TARGET 60.0
+
+#define TIMEOUT_PACKAGE 4
+
+static void progExit(void)
 {
-	signal(sig, SIG_IGN);
+	graphicsExit();
 	glfwTerminate();
 	serialEnd();
-	printf("\nVisualization aborted.\n");
+	fputs(INFO_END, stdout);
 	exit(0);
 }
 
-void error_callback(int error, const char* description)
+static void signalIntHandler(int sig)
 {
-    fputs("GLFW related error.\n", stderr);
+	signal(sig, SIG_IGN);
+	progExit();
 }
 
-void close_callback(GLFWwindow* window)
-{	
-    glfwSetWindowShouldClose(window, GL_TRUE);
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static double timeSince(double time)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
-		
-	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-		cubeProximity -= PROXIMITY_STEPSIZE;
-	
-	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-		cubeProximity += PROXIMITY_STEPSIZE;
-		
-	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-		cubeHeading -= HEADING_STEPSIZE;
-	
-	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-		cubeHeading += HEADING_STEPSIZE;
-		
-	if (key == GLFW_KEY_T && action == GLFW_PRESS)
-		cubeScaleX += SCALING_STEPSIZE;
-	
-	if (key == GLFW_KEY_G && action == GLFW_PRESS)
-		cubeScaleX -= SCALING_STEPSIZE;
-	
-	if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-		cubeScaleY += SCALING_STEPSIZE;
-	
-	if (key == GLFW_KEY_H && action == GLFW_PRESS)
-		cubeScaleY -= SCALING_STEPSIZE;
-	
-	if (key == GLFW_KEY_U && action == GLFW_PRESS)
-		cubeScaleZ += SCALING_STEPSIZE;
-	
-	if (key == GLFW_KEY_J && action == GLFW_PRESS)
-		cubeScaleZ -= SCALING_STEPSIZE;
-}
-
-// This is redundant, but nice to have
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	int minSize = width >= height ? height : width;
-	glViewport((width-minSize)/2, (height-minSize)/2, minSize, minSize);
-}
-
-void window_size_callback(GLFWwindow* window, int width, int height) {
-	
-	int minSize = width >= height ? height : width;
-	glfwSetWindowSize(window, minSize, minSize);
-}
-
-void setCallbacks(GLFWwindow* window) {
-	glfwSetErrorCallback(error_callback);
-	glfwSetWindowCloseCallback(window, close_callback); 
-	glfwSetKeyCallback(window, key_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetWindowSizeCallback(window, window_size_callback);
-}
-
-GLFWwindow* initWindow(void) {
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_REFRESH_RATE, 200); // SHOULD REMOVE?
-	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Orientation Visualizer", NULL, NULL);
-	setCallbacks(window);
- 	
-	int bufferWidth, bufferHeight;
-	glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
-	glfwMakeContextCurrent(window);
-	//glfwSwapInterval(1); //DANGER?
-	glViewport(0, 0, bufferWidth,bufferHeight);
-	glewExperimental = GL_TRUE;
-	glewInit();	
-	
-	graphicsInit();
-	
-	return window;
+	return glfwGetTime() - time;
 }
 
 int main(int argc, char** argv)
 {	
-
-	signal(SIGINT, SIGINT_handler);
-	struct serialPort serialPort1;
-	
-	if (argc == 4) {
-		serialStartArgs(&serialPort1, argv + 1);
-	}
-	else if (argc == 1) {
-		serialStartManual(&serialPort1);
-	}
-	else {
-		fputs("Error: Incorrect number of arguments.\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	
-    if (!glfwInit())
+	// Initialization
+   if (!glfwInit()) {
+    	fputs(ERR_GLFW, stdout);
         exit(EXIT_FAILURE);
-	GLFWwindow* window = initWindow();
-	
-	struct mat4 serialMatrix;
-	struct mat4 guiMatrix;
-	struct mat4 modelMatrix;
-	struct mat4 scalingMatrix;
-	
-	mat4Perspective(&graphicsProjectionMatrix, 1, 5, 1, 1);
-	
-	mat4Init(&serialMatrix);
-	mat4Init(&guiMatrix);
-	mat4Init(&modelMatrix);
-	mat4Init(&scalingMatrix);
-	
-	mat4SetScaling(&scalingMatrix, cubeScaleX, cubeScaleY, cubeScaleZ);
-	
-	printf("Read: %i, write: %i, line: %i\n", serialPort1.readIdx, serialPort1.writeIdx, serialPort1.lineIdx);
-
-	double packetTime = glfwGetTime();
-	double frameTime = 	glfwGetTime();
-	double avgPacketTime = 10000;;
-	int updated;
+    }
+	signal(SIGINT, signalIntHandler);
+	GLFWwindow * window = interfaceInitWindow();
+	graphicsInit();
+	struct serialPort serialPort1;
+	serialInitiate(&serialPort1, argc - 1, argv + 1);
+    struct graphicsConfig graCon;
+    graphicsConfigSetDefault(&graCon);
+	double timerPackage = glfwGetTime();
+	double timerFrame   = glfwGetTime();
+	double intervalPackage  = 0;
+	double intervalFrame    = 0;
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+		int countPackages = serialUpdate(&serialPort1);
 
-		if (updated) {
-			printf("Frequency: %f\n", 1 / avgPacketTime);
-			avgPacketTime = avgPacketTime * 0.95 + (glfwGetTime() - packetTime) * 0.05;
-			packetTime = glfwGetTime();
+		if (countPackages) {
+			double intervalDiff = timeSince(timerPackage) - intervalPackage;
+			intervalPackage += UPDATESPEED_PACKAGE * intervalDiff / countPackages;
+			timerPackage = glfwGetTime();
 		}
 
-		updated = serialUpdateBuffer(&serialPort1);
-		serialUpdataOrientation(&serialPort1, &serialMatrix);
-		mat4SetRotFromHPR(&guiMatrix, cubeHeading, 0, 0);
-		mat4SetTranslation(&guiMatrix, cubeProximity, 0, 0);
-		
-		mat4Mult(&serialMatrix, &scalingMatrix, &modelMatrix);
-		mat4Mult(&guiMatrix, &modelMatrix, &modelMatrix);
-		
-		if (glfwGetTime() - frameTime > 1.0f / 60) {
-			graphicsDrawCube(&modelMatrix);		
+		if (timeSince(timerPackage) > TIMEOUT_PACKAGE) {
+			intervalPackage += timeSince(timerPackage);
+			timerPackage = glfwGetTime();
+		}
+
+		printf("Frame: %f Framterval: %f package %f", 1 / intervalFrame, intervalFrame, 1 / intervalPackage);
+		printf("packages yo %i\n", countPackages);
+
+
+		if (timeSince(timerFrame) > 1.0 / FRAMERATE_TARGET) {
+			double intervalDiff = timeSince(timerFrame) - intervalFrame;
+			intervalFrame += UPDATESPEED_FRAME * intervalDiff;
+			timerFrame = glfwGetTime();
+			graCon.matSerial = serialPort1.matOri;
+			graphicsDrawCube(&graCon);		
 			glfwSwapBuffers(window);
-			frameTime = glfwGetTime();
+			serialPort1.flagNewOrientation = 0;
 		}
+
 	}
 	
-	printf("Visualization finished.\n");
-	glfwTerminate();
-	serialClose(&serialPort1);
-	serialEnd();
-	return 0;
+	progExit();
+	return 0; // Unneccesary
 }

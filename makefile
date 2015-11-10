@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -I.
-OBJECTS = main.o matrix4.o serial.o graphics.o rs232-unix.o
+CFLAGS = -I. -Wall
+OBJECTS = main.o matrix4.o serial.o graphics.o interface.o rs232-unix.o
 TARGET = visualizer.out
 LIBS= -lglew -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
 
@@ -18,6 +18,9 @@ serial.o : serial.c
 
 graphics.o : graphics.c
 	$(CC) $(CFLAGS) -c graphics.c
+
+interface.o : interface.c
+	$(CC) $(CFLAGS) -c interface.c
 
 rs232-unix.o : rs232/rs232-unix.c
 	$(CC) $(CFLAGS) -c rs232/rs232-unix.c

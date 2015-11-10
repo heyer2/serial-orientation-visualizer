@@ -1,10 +1,23 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#include <glfw/glfw3.h>
 #include "matrix4.h"
 
-struct mat4 graphicsProjectionMatrix;
-void graphicsDrawCube(struct mat4* modelMatrix);
+struct graphicsConfig {
+	struct mat4 matSerial;
+	double scaleX;
+	double scaleY;
+	double scaleZ;
+	double camDist;
+	double projNear;
+	double projFar;
+	double projWidth;
+	double projHeight;
+};
+
+void graphicsConfigSetDefault(struct graphicsConfig * graCon);
+void graphicsDrawCube(struct graphicsConfig * graCon);
 void graphicsInit(void);
 void graphicsExit(void);
 

@@ -1,42 +1,28 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <math.h>
 #include "rs232/rs232.h"
 #include "headers/serial.h"
 #include "headers/matrix4.h"
 
-#define TERMINAL_BUFFER_SIZE 512
+#define TMP_BUFFER_SIZE 1024
 
-#define TMP_BUFFER_SIZE 2048
+#define ERR_ARG "Error: Unknown program input parameter.\n"
+#define ERR_BAUD "Error: Nun-numeric baud rate.\n"
+#define ERR_REP "Error: Unknown representation.\n"
+#define ERR_PORTNAME "Error: Invalid port name.\n"
+#define ERR_PORTAVAIL "Error: Port not available.\n"
 
+#define INFO_PORTREADY "Port successfully opened \n"
 
-char* getInput()
-{
-	static char input[TERMINAL_BUFFER_SIZE];
-	
-	for (int i = 0; i < TERMINAL_BUFFER_SIZE; i++) {
-		input[i] = fgetc(stdin);
-		if (input[i] == 0x0A) {
-			input[i] = '\0';
-			return input;		
-		}
-	}
-	fputs("Input buffer overflow.", stderr);
-	return NULL; // redundant
-}
+#define ELEMENTS_HRR 3
+#define ELEMENTS_MATRIX 9
 
-int stringCountSpaces(char * str)
-{	
-	int i = 0;
-	int spaces = 0;
-	while (str[i] != '\0') {
-		if (str[i] == ' ')
-			spaces++;
-		i++;
-	}
-	return spaces;
-}
+#define ELEMENTSIZE_FLOAT 4
+#define ELEMENTSIZE_FIXED16 2
+#define ELEMENTSIZE_FIXED32 4
 
-int stringIsNumeric(char* str) 
+int stringIsNumeric(char * str) 
 {
     while(*str != '\0')
     {
@@ -47,7 +33,7 @@ int stringIsNumeric(char* str)
     return 1;
 }
 
-int string2Int(char* str)
+int string2Int(char * str)
 {
 	int i = 0;
 	int output = 0;
@@ -61,8 +47,8 @@ int string2Int(char* str)
 	return output;
 }
 
-int stringIsEqual(char* str1, char* str2)
-{	
+int stringIsEqual(char * str1, char * str2)
+{
 	int i = -1;
 	do {
 		i++;
@@ -73,182 +59,184 @@ int stringIsEqual(char* str1, char* str2)
 	return 1;
 }
 
-void serialStartArgs(struct serialPort* serial, char** argv)
+void serialSetBaud(struct serialPort * serial, char * arg)
 {
-	if (stringIsEqual(argv[0], "HPR"))
-		serial->representation = HPR;
-	else if (stringIsEqual(argv[0], "matrix"))
-		serial->representation = matrix;
+	if (stringIsNumeric(arg))
+		serial->baud = string2Int(arg);
 	else {
-		fputs("Unknown representation.\n", stderr);
+		fputs("ERR_BAUD", stderr);
 		exit(EXIT_FAILURE);
 	}
+}
 
-	int baud;
-	if (stringIsNumeric(argv[1]))
-		baud = string2Int(argv[1]);
+void serialSetOrientation(struct serialPort * serial, char * arg)
+{
+	if (stringIsEqual(arg, "HPR"))
+		serial->oriRep = HPR;
+	else if (stringIsEqual(arg, "matrix"))
+		serial->oriRep = matrix;
 	else {
-		fputs("Non-numeric baud rate.\n", stderr);
+		fputs(ERR_REP, stderr);
 		exit(EXIT_FAILURE);
 	}
+}
+
+void serialSetNumber(struct serialPort * serial, char * arg)
+{
+	if (stringIsEqual(arg, "floating"))
+		serial->numRep = floating;
+	else if (stringIsEqual(arg, "fixed16"))
+		serial->numRep = fixed16;
+	else if (stringIsEqual(arg, "fixed32"))
+		serial->numRep = fixed32;
+	else {
+		fputs(ERR_REP, stderr);
+		exit(EXIT_FAILURE);
+	}
+}
+
+void serialOpen(struct serialPort * serial, char * arg)
+{	
 	comEnumerate();
-	int index = comFindPort(argv[2]);
+	int index = comFindPort(arg);
 	int status;
 	
 	if (index != -1)
-		status = comOpen(index, baud);
+		status = comOpen(index, serial->baud);
 	else {
-		fputs("Invalid port name.\n", stderr);
+		fputs(ERR_PORTNAME, stderr);
 		exit(EXIT_FAILURE);
 	}
 	
 	if (status == 0) {
-		fputs("Port not available.\n", stderr);
+		fputs(ERR_PORTAVAIL, stderr);
 		exit(EXIT_FAILURE);
 	}
-	serial->lineIdx = 0;
-	serial->writeIdx = 0;
-	serial->readIdx = 0;
+
 	serial->portIndex = index;
-	printf("Port ready for use.\n");
+	serial->bufferIdx = 0;
+	serial->flagNewOrientation = 0;
+	serial->flagDesync = 1;
+	mat4Eye(&serial->matOri);
+	fputs(INFO_PORTREADY, stdout);
 }
 
-void serialStartManual(struct serialPort* serial) {
-	char* input;
-	int status = -1;
-	
-	comEnumerate();
-	
-	while (status != 1) {
-		if (status == 0) //not first run
-			printf("Port unavailable, try again.\n");
-		
-		printf("Enter name of port to be opened:\n");
-		serial->portIndex = comFindPort(getInput());
-		while (serial->portIndex == -1) {
-			printf("Invalid port name, retry:\n");
-			serial->portIndex = comFindPort(getInput());
-		}
-		printf("Enter the baud rate of the port to be opened:\n");
-		input = getInput();
-		while (!stringIsNumeric(input)) {
-			printf("Not a number, try again:\n");
-			input = getInput();
-		}
-		status = comOpen(serial->portIndex, string2Int(input));
-	}
-	
-	printf("Port successfully opened.\n");
-	
-	status = -1;
-	while (status != 1) {
-		if (status == 0) //not first run
-			printf("Not among selection, try again.\n");
-		
-		printf("What is the type of input? Choose among [HPR, matrix]:\n");
-		input = getInput();
-		if (stringIsEqual(input, "HPR")) {
-			serial->representation = HPR;
-			status = 1;
-		} else if (stringIsEqual(input, "matrix")) {
-			serial->representation = matrix;
-			status = 1;
-		} else
-			status = 0;
-	}
-	serial->lineIdx = 0;
-	serial->writeIdx = 0;
-	serial->readIdx = 0;
-	printf("Port ready for use.\n");
-}
-
-void serialIncrementReadIdx(struct serialPort* serial)
-{
-	if (serial->readIdx == SERIAL_LINES - 1)
-		serial->readIdx = 0;
-	else
-		serial->readIdx++;
-}
-
-void serialIncrementWriteIdx(struct serialPort* serial)
-{
-	if (serial->writeIdx == SERIAL_LINES - 1)
-		serial->writeIdx = 0;
-	else
-		serial->writeIdx++;
-	if (serial->writeIdx == serial->readIdx)
-		serialIncrementReadIdx(serial);
-}
-
-void serialIncrementLineIdx(struct serialPort* serial)
-{
-	if (serial->lineIdx < SERIAL_BUFFER_SIZE - 1)
-		serial->lineIdx++;
-	else
-		fputs("Received too long line.\n", stderr);
-}
-
-int serialUpdateBuffer(struct serialPort* serial)
+void serialInitiate(struct serialPort * serial, int argc, char ** argv)
 {	
-	int incrementedLine = 0;
-	char tmpString[TMP_BUFFER_SIZE];
-	int readChars = comRead(serial->portIndex, tmpString, TMP_BUFFER_SIZE);
-	for (int i = 0; i < readChars; i++) {
-		if (tmpString[i] == '\n') {
-			serial->buffer[serial->writeIdx][serial->lineIdx] = '\0';
-			serial->lineIdx = 0;
-			serialIncrementWriteIdx(serial);
-			incrementedLine++;
-		} else if (tmpString[i] != '\r') { 	
-			serial->buffer[serial->writeIdx][serial->lineIdx] = tmpString[i];
-			serialIncrementLineIdx(serial);
-		}
+	printf("So far 2.55\n");
+	for (int i = 0; i < argc - 1; i++) {
+		if (argv[i][0] == '-')
+			switch (argv[i][1]) {
+				printf("So far 2.6\n");
+				case 'b': serialSetBaud(serial, argv[i + 1]);		 break;
+				case 'o': serialSetOrientation(serial, argv[i + 1]); break;
+				case 'n': serialSetNumber(serial, argv[i + 1]);		 break;
+				default : fputs(ERR_ARG, stderr); exit(EXIT_FAILURE);break;
+				printf("So far 2.7\n");
+			}
 	}
-	return incrementedLine;
+	printf("So far 2.8\n");
+	serialOpen(serial, argv[argc-1]);
+	printf("So far 2.9\n");
 }
 
-
-int serialUpdataOrientation(struct serialPort* serial, struct mat4* outputMatrix)
+double serialRawToDouble(struct serialPort * serial, void * ptr)
 {
-	if (serial->writeIdx == serial->readIdx)
-		return 0;
-	switch(serial->representation) {
-		case HPR : {
-			double heading, pitch, roll;
-			int spaces = stringCountSpaces(serial->buffer[serial->readIdx]);
-			int conforms = sscanf(serial->buffer[serial->readIdx], "%lf %lf %lf", &heading, &pitch, &roll);
-			serialIncrementReadIdx(serial);
-			//printf("Conforms: %i Spaces: %i\n", conforms, spaces);
-			if (spaces > 3 || conforms != 3)
-				return 0;
-			mat4SetRotFromHPR(outputMatrix, heading, pitch, roll);
-			return 1;
-			break;
-		}
-		case matrix : {
-			struct mat4 rotMatrix;
-			mat4Init(&rotMatrix);
-			int spaces = stringCountSpaces(serial->buffer[serial->readIdx]);
-			int conforms = sscanf(serial->buffer[serial->readIdx], "%lf %lf %lf %lf %lf %lf %lf %lf %lf", &(rotMatrix.data[0][0]), &(rotMatrix.data[0][1]), &(rotMatrix.data[0][2]), &(rotMatrix.data[1][0]), &(rotMatrix.data[1][1]), &(rotMatrix.data[1][2]), &(rotMatrix.data[2][0]), &(rotMatrix.data[2][1]), &(rotMatrix.data[2][2]));
-			serialIncrementReadIdx(serial);
- 			//printf("Conforms: %i Spaces: %i\n", conforms, spaces);
-			if (spaces > 10 || conforms != 9)
-				return 0;
-			mat4SetRotFromMat(outputMatrix, &rotMatrix);
-			//printf("Successfully set rot\n");
-			return 1;
-			break;
-		}
-		case undef : 
-			fputs("Error: Cannot update orientation using serial object with undefined representation.\n", stderr);
-			break;
-		default : 
-			fputs("Error: Switch statement fall through error.\n", stderr);
-	}	
-	return(0);
+	switch(serial->numRep) {
+		case floating: return *(float*)ptr;
+		case fixed16 : return *(int16_t*)ptr / 32767.0;
+		case fixed32 : return *(int32_t*)ptr / 2147483647.0;
+	}
 }
 
-void serialClose(struct serialPort* serial)
+void serialMatrixFromPackage(struct serialPort * serial, char * packet)
+{
+	int elementSize;
+	switch(serial->numRep) {
+		case floating: elementSize = ELEMENTSIZE_FLOAT;  break;
+		case fixed16 : elementSize = ELEMENTSIZE_FIXED16;break;
+		case fixed32 : elementSize = ELEMENTSIZE_FIXED32;break;
+	}
+
+	int elements;
+	switch(serial->oriRep) {
+		case HPR   : elements = ELEMENTS_HRR;  	break;
+		case matrix: elements = ELEMENTS_MATRIX;break;
+	}
+
+	double packetData[elements];
+
+	for (int i = 0; i < elements; i++) {
+		void * ptr = packet + i * elementSize;
+		packetData[i] = serialRawToDouble(serial, ptr);
+	}
+
+	switch(serial->oriRep) {
+		case HPR:
+			mat4SetRotFromHPR(&serial->matOri, packetData[0], packetData[1], packetData[2]);
+			break;
+		case matrix:
+			for (int i = 0; i < ELEMENTS_MATRIX; i++)
+				serial->matOri.data[i/3][i%3] = packetData[i];
+			break;
+	}
+}
+
+int serialResync(struct serialPort * serial)
+{	
+	char byte;
+	comRead(serial->portIndex, &byte, 1);
+	if (byte == '\n') {
+		serial->flagDesync = 0;
+		serial->bufferIdx = 0;
+		return 1;
+	}
+	else
+		return 0;
+}
+
+int serialUpdate(struct serialPort * serial)
+{	
+	if (serial->flagDesync && !serialResync(serial))
+		return 0;
+
+	int packetCount = 0;
+	int packetSize = 1;
+
+	switch(serial->oriRep) {
+		case HPR   : packetSize *= ELEMENTS_HRR;   break;
+		case matrix: packetSize *= ELEMENTS_MATRIX;break;
+	}
+	switch(serial->numRep) {
+		case floating: packetSize *= ELEMENTSIZE_FLOAT;  break;
+		case fixed16 : packetSize *= ELEMENTSIZE_FIXED16;break;
+		case fixed32 : packetSize *= ELEMENTSIZE_FIXED32;break;
+	}
+
+	char packet[packetSize + 1]; // End of packet marker, newline
+	char tmpBuffer[TMP_BUFFER_SIZE];
+	int readChars = comRead(serial->portIndex, tmpBuffer, TMP_BUFFER_SIZE);
+	for (int i = 0; i < readChars; i++) {
+		serial->buffer[serial->bufferIdx] = tmpBuffer[i];
+		if (serial->bufferIdx == packetSize) {
+			for (int j = 0; j <= packetSize; j++)
+				packet[j] = serial->buffer[j];
+			serial->bufferIdx = 0;
+			packetCount++;
+		}
+		else
+			serial->bufferIdx++;
+	}
+	if (packet[packetSize] != '\n') {
+		serial->flagDesync = 1;
+		return 0;
+	}
+	serialMatrixFromPackage(serial, packet);
+	serial->flagNewOrientation = 1;
+	return packetCount;
+}
+
+void serialClose(struct serialPort * serial)
 {
 	comClose(serial->portIndex);
 }

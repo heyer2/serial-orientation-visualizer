@@ -4,8 +4,19 @@
 #include "headers/matrix4.h"
 #include "headers/graphics.h"
 
-// Draw settings - remembers necessary stuff for drawing
+#define PROJ_DEF_NEAR  1
+#define PROJ_DEF_FAR   5
+#define PROJ_DEF_WIDTH 1
+#define PROJ_DEF_HEIGHT 1
 
+#define SCALE_DEF_X 1
+#define SCALE_DEF_Y 1
+#define SCALE_DEF_Z 1
+
+#define CAMDIST_DEF (-2)
+
+
+// Draw settings - remembers necessary stuff for drawing
 GLuint cubeShader;
 GLuint cubeVAO;
 GLuint cubeVBO;
@@ -87,7 +98,7 @@ GLuint initShaders(void)
 	glCompileShader(vertexShader);
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 	
-	if(!success){
+	if(!success) {
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 		printf("Error in vertex shader compilation\n");
 		printf("%s", infoLog);
@@ -156,11 +167,6 @@ void graphicsInit(void)
 {	
 	cubeShader = initShaders();
 	initObjects();
-	
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_MULTISAMPLE);
-
 }
 
 void graphicsExit(void)
@@ -170,27 +176,52 @@ void graphicsExit(void)
     glDeleteVertexArrays(1, &cubeVAO);
 }
 
-void fillGLfloatArrayFromMat4(struct mat4* inputMatrix, GLfloat outputArray[16])
+void fillGLfloatArrayFromMat4(struct mat4 * inputMatrix, GLfloat outputArray[16])
 {
 	for (int i = 0; i < 16; i++)
 		outputArray[i] = ((double*) inputMatrix)[i];
 }
 
-void graphicsDrawCube(struct mat4* modelMatrix)
-{		
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		GLfloat modelArray[16];
-		GLfloat projArray[16];
-		fillGLfloatArrayFromMat4(modelMatrix, modelArray);
-		fillGLfloatArrayFromMat4(&graphicsProjectionMatrix, projArray);
-		glUseProgram(cubeShader);
-		glUniformMatrix4fv(cubeModelUni, 1, GL_TRUE, modelArray);
-		glUniformMatrix4fv(cubeProjUni, 1, GL_TRUE, projArray);
-		glBindVertexArray(cubeVAO);
-		glDrawElements(GL_TRIANGLES, sizeof(cubeIndices) / sizeof(*cubeIndices), GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-		glUseProgram(0);
-		
+void graphicsConfigSetDefault(struct graphicsConfig * graCon)
+{
+	mat4Eye(&graCon->matSerial);
+	graCon->scaleX = SCALE_DEF_X;
+	graCon->scaleY = SCALE_DEF_Y;
+	graCon->scaleZ = SCALE_DEF_Z;
+	graCon->camDist = CAMDIST_DEF;
+	graCon->projNear = PROJ_DEF_NEAR;
+	graCon->projFar = PROJ_DEF_FAR;
+	graCon->projWidth = PROJ_DEF_WIDTH;
+	graCon->projHeight = PROJ_DEF_HEIGHT;
 }
-//sizeof(cubeIndices) / sizeof(*cubeIndices)
+
+void graphicsDrawCube(struct graphicsConfig * graCon)
+{		
+	struct mat4 matProj;
+	struct mat4 matScale;
+	struct mat4 matCam;
+	struct mat4 matModel;
+	
+	mat4Perspective(&matProj, graCon->projNear, graCon->projFar, graCon->projWidth, graCon->projHeight);
+
+	mat4Eye(&matScale);
+	mat4SetScaling(&matScale, graCon->scaleX, graCon->scaleY, graCon->scaleZ);
+	mat4Mult(&graCon->matSerial, &matScale, &matModel);
+
+	mat4Eye(&matCam);
+	mat4SetTranslation(&matCam, graCon->camDist, 0, 0);
+	mat4Mult(&matProj, &matCam, &matProj);	
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	GLfloat arrayModel[16];
+	GLfloat arrayProj[16];
+	fillGLfloatArrayFromMat4(&matModel, arrayModel);
+	fillGLfloatArrayFromMat4(&matProj, arrayProj);
+	glUseProgram(cubeShader);
+	glUniformMatrix4fv(cubeModelUni, 1, GL_TRUE, arrayModel);
+	glUniformMatrix4fv(cubeProjUni, 1, GL_TRUE, arrayProj);
+	glBindVertexArray(cubeVAO);
+	glDrawElements(GL_TRIANGLES, sizeof(cubeIndices) / sizeof(*cubeIndices), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	glUseProgram(0);
+}

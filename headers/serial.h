@@ -4,23 +4,30 @@
 #include "matrix4.h"
 
 #define SERIAL_BUFFER_SIZE 512
-#define SERIAL_LINES 200
 
 struct serialPort {
+	int flagDesync;
+	int flagNewOrientation;
+	struct mat4 matOri;
 	int portIndex;
-	int baudrate; // NOT REALLY USED??!?!?
-	int readIdx;
-	int writeIdx;
-	int lineIdx;
-	char buffer[SERIAL_LINES][SERIAL_BUFFER_SIZE];
-	enum oriType {undef, HPR, matrix} representation;
+	int baud;
+	int bufferIdx;
+	char buffer[SERIAL_BUFFER_SIZE];
+	enum oriType {HPR, matrix} oriRep;
+	enum numberType {floating, fixed16, fixed32} numRep;
 };
 
-void serialStartArgs(struct serialPort* serial, char** argv);
-void serialStartManual(struct serialPort* serial);
-int serialUpdateBuffer(struct serialPort* serial);
-int serialUpdataOrientation(struct serialPort* serial, struct mat4* outputMatrix);
-void serialClose(struct serialPort* serial);
+
+void serialSetBaud(struct serialPort * serial, char * arg);
+void serialSetOrientation(struct serialPort * serial, char * arg);
+void serialSetNumber(struct serialPort * serial, char * arg);
+void serialOpen(struct serialPort * serial, char * arg);
+void serialInitiate(struct serialPort * serial, int argc, char ** argv);
+int serialResync(struct serialPort * serial);
+double serialRawToDouble(struct serialPort * serial, void * ptr);
+void serialMatrixFromPackage(struct serialPort * serial, char * package);
+int serialUpdate(struct serialPort * serial);
+void serialClose(struct serialPort * serial);
 void serialEnd(void);
 
 #endif /* SERIAL_H */
