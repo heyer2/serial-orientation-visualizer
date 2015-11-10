@@ -123,21 +123,16 @@ void serialOpen(struct serialPort * serial, char * arg)
 
 void serialInitiate(struct serialPort * serial, int argc, char ** argv)
 {	
-	printf("So far 2.55\n");
 	for (int i = 0; i < argc - 1; i++) {
 		if (argv[i][0] == '-')
 			switch (argv[i][1]) {
-				printf("So far 2.6\n");
 				case 'b': serialSetBaud(serial, argv[i + 1]);		 break;
 				case 'o': serialSetOrientation(serial, argv[i + 1]); break;
 				case 'n': serialSetNumber(serial, argv[i + 1]);		 break;
 				default : fputs(ERR_ARG, stderr); exit(EXIT_FAILURE);break;
-				printf("So far 2.7\n");
 			}
 	}
-	printf("So far 2.8\n");
 	serialOpen(serial, argv[argc-1]);
-	printf("So far 2.9\n");
 }
 
 double serialRawToDouble(struct serialPort * serial, void * ptr)

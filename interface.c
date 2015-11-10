@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <glew/glew.h>
+#include <GL/glew.h>
 #include <glfw/glfw3.h>
 #include "headers/interface.h"
 

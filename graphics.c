@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "glew/glew.h"
+#include <GL/glew.h>
 #include "headers/matrix4.h"
 #include "headers/graphics.h"
 
