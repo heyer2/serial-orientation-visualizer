@@ -9,9 +9,9 @@
 #define PROJ_DEF_WIDTH 1
 #define PROJ_DEF_HEIGHT 1
 
-#define SCALE_DEF_X 1
+#define SCALE_DEF_X 2
 #define SCALE_DEF_Y 1
-#define SCALE_DEF_Z 1
+#define SCALE_DEF_Z 0.25
 
 #define CAMDIST_DEF (-2)
 
@@ -71,30 +71,30 @@ const GLfloat cubeVertices[] = { // x y z, r g b
 */
 
 const GLfloat cubeVertices[] = { // x y z, r g b
-    -0.4f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  0 UpperSurf : Top-Near-Left
-	-0.4f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  1 UpperSurf : Top-Near-Right
-	 0.4f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  2 UpperSurf : Top-Far-Left
-	 0.4f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  3 UpperSurf : Top-Far-Right
-    -0.4f, -0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  4 BotSurf   : Bottom-Near-Left
-    -0.4f,  0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  5 BotSurf   : Bottom-Near-Right
-	 0.4f, -0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  6 BotSurf   : Bottom-Far-Left
-     0.4f,  0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  7 BotSurf   : Bottom-Far-Right
-    -0.4f, -0.2f, -0.2f,  0.0f,  0.5f,  0.0f, //  8 LeftSurf  : Bottom-Near-Left
-    -0.4f, -0.2f,  0.2f,  0.0f,  0.5f,  0.0f, //  9 LeftSurf  : Top-Near-Left
-   	 0.4f, -0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 10 LeftSurf  : Bottom-Far-Left
-   	 0.4f, -0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 11 LeftSurf  : Top-Far-Left
-    -0.4f,  0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 12 RightSurf : Bottom-Near-Right
-    -0.4f,  0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 13 RightSurf : Top-Near-Right
-     0.4f,  0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 14 RightSurf : Bottom-Far-Right
-	 0.4f,  0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 15 RightSurf : Top-Far-Right
-	-0.4f, -0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 16 FarSurf   : Far-Bottom-Left
-	-0.4f,  0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 17 FarSurf   : Far-Bottom-Right
-	-0.4f, -0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 18 FarSurf   : Far-Top-Left
-	-0.4f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 19 FarSurf   : Far-Top-Right
- 	 0.4f, -0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 20 NearSurf  : Near-Bottom-Left
-     0.4f,  0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 21 NearSurf  : Near-Bottom-Right
-     0.4f, -0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 22 NearSurf  : Near-Top-Left
-	 0.4f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f  // 23 NearSurf  : Near-Top-Right
+    -0.2f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  0 UpperSurf : Top-Near-Left
+	-0.2f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  1 UpperSurf : Top-Near-Right
+	 0.2f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  2 UpperSurf : Top-Far-Left
+	 0.2f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  3 UpperSurf : Top-Far-Right
+    -0.2f, -0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  4 BotSurf   : Bottom-Near-Left
+    -0.2f,  0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  5 BotSurf   : Bottom-Near-Right
+	 0.2f, -0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  6 BotSurf   : Bottom-Far-Left
+     0.2f,  0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  7 BotSurf   : Bottom-Far-Right
+    -0.2f, -0.2f, -0.2f,  0.0f,  0.5f,  0.0f, //  8 LeftSurf  : Bottom-Near-Left
+    -0.2f, -0.2f,  0.2f,  0.0f,  0.5f,  0.0f, //  9 LeftSurf  : Top-Near-Left
+   	 0.2f, -0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 10 LeftSurf  : Bottom-Far-Left
+   	 0.2f, -0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 11 LeftSurf  : Top-Far-Left
+    -0.2f,  0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 12 RightSurf : Bottom-Near-Right
+    -0.2f,  0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 13 RightSurf : Top-Near-Right
+     0.2f,  0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 14 RightSurf : Bottom-Far-Right
+	 0.2f,  0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 15 RightSurf : Top-Far-Right
+	-0.2f, -0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 16 FarSurf   : Far-Bottom-Left
+	-0.2f,  0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 17 FarSurf   : Far-Bottom-Right
+	-0.2f, -0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 18 FarSurf   : Far-Top-Left
+	-0.2f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 19 FarSurf   : Far-Top-Right
+ 	 0.2f, -0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 20 NearSurf  : Near-Bottom-Left
+     0.2f,  0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 21 NearSurf  : Near-Bottom-Right
+     0.2f, -0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 22 NearSurf  : Near-Top-Left
+	 0.2f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f  // 23 NearSurf  : Near-Top-Right
 };
 
 /*

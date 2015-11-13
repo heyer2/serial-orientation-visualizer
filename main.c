@@ -15,8 +15,6 @@
 
 #define FRAMERATE_TARGET 60.0
 
-#define TIMEOUT_PACKAGE 4
-
 static void progExit(void)
 {
 	graphicsExit();
@@ -51,18 +49,21 @@ int main(int argc, char** argv)
 	serialInitiate(&serialPort1, argc - 1, argv + 1);
     struct graphicsConfig graCon;
     graphicsConfigSetDefault(&graCon);
+
 	double timerPackage = glfwGetTime();
 	double timerFrame   = glfwGetTime();
 	double timerPool    = glfwGetTime();
-	double freqPackage  = 0;
-	double intervalFrame    = 0;
+	double freqPackage = 0;
+	double intervalFrame = 0;
 	int totalPackages = 0;
 
 	
 
 	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
 
-		if (timeSince(timerPool) > 1/10000) {
+
+		if (timeSince(timerPool) > 1.0/10000.0) {
 			int countPackages = serialUpdate(&serialPort1);
 			timerPool = glfwGetTime();
 			totalPackages += countPackages;
