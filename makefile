@@ -1,8 +1,9 @@
 CC = gcc
-CFLAGS = -I. -Wall
+CFLAGS = -I. -Wall -pedantic 
 OBJECTS = main.o matrix4.o serial.o graphics.o interface.o rs232-unix.o
 TARGET = visualizer.out
-LIBS= -lglew -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
+LIBS = -lglew -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
+# Not quite sure that dynamic linking is being done with GLEW
 
 $(TARGET) : $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $(TARGET) $(LIBS)

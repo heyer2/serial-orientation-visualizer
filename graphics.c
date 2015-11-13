@@ -56,7 +56,8 @@ const GLchar* const fragmentShaderSource =
 	"}                                                               	  \n";
 	
 // 3D model
-	
+
+/*
 const GLfloat cubeVertices[] = { // x y z, r g b
     -0.4f, -0.2f, -0.2f,  0.0f,  0.6f,  0.0f, // 0 Near-Bottom-Left
     -0.4f,  0.2f, -0.2f,  0.0f,  0.6f,  0.0f, // 1 Near-Bottom-Right
@@ -67,8 +68,36 @@ const GLfloat cubeVertices[] = { // x y z, r g b
      0.4f, -0.2f,  0.2f,  1.0f,  0.0f,  0.0f, // 6 Far-Top-Left
 	 0.4f,  0.2f,  0.2f,  1.0f,  0.0f,  0.0f  // 7 Far-Top-Right
 };
+*/
 
-	
+const GLfloat cubeVertices[] = { // x y z, r g b
+    -0.4f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  0 UpperSurf : Top-Near-Left
+	-0.4f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  1 UpperSurf : Top-Near-Right
+	 0.4f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  2 UpperSurf : Top-Far-Left
+	 0.4f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  3 UpperSurf : Top-Far-Right
+    -0.4f, -0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  4 BotSurf   : Bottom-Near-Left
+    -0.4f,  0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  5 BotSurf   : Bottom-Near-Right
+	 0.4f, -0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  6 BotSurf   : Bottom-Far-Left
+     0.4f,  0.2f, -0.2f,  0.0f,  0.0f,  0.5f, //  7 BotSurf   : Bottom-Far-Right
+    -0.4f, -0.2f, -0.2f,  0.0f,  0.5f,  0.0f, //  8 LeftSurf  : Bottom-Near-Left
+    -0.4f, -0.2f,  0.2f,  0.0f,  0.5f,  0.0f, //  9 LeftSurf  : Top-Near-Left
+   	 0.4f, -0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 10 LeftSurf  : Bottom-Far-Left
+   	 0.4f, -0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 11 LeftSurf  : Top-Far-Left
+    -0.4f,  0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 12 RightSurf : Bottom-Near-Right
+    -0.4f,  0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 13 RightSurf : Top-Near-Right
+     0.4f,  0.2f, -0.2f,  0.0f,  0.5f,  0.0f, // 14 RightSurf : Bottom-Far-Right
+	 0.4f,  0.2f,  0.2f,  0.0f,  0.5f,  0.0f, // 15 RightSurf : Top-Far-Right
+	-0.4f, -0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 16 FarSurf   : Far-Bottom-Left
+	-0.4f,  0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 17 FarSurf   : Far-Bottom-Right
+	-0.4f, -0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 18 FarSurf   : Far-Top-Left
+	-0.4f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 19 FarSurf   : Far-Top-Right
+ 	 0.4f, -0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 20 NearSurf  : Near-Bottom-Left
+     0.4f,  0.2f, -0.2f,  0.5f,  0.0f,  0.0f, // 21 NearSurf  : Near-Bottom-Right
+     0.4f, -0.2f,  0.2f,  0.5f,  0.0f,  0.0f, // 22 NearSurf  : Near-Top-Left
+	 0.4f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f  // 23 NearSurf  : Near-Top-Right
+};
+
+/*
 const GLuint cubeIndices[] = {
 	0, 1, 4,
 	1, 4, 5, // Bottom Surface
@@ -82,6 +111,22 @@ const GLuint cubeIndices[] = {
     1, 2, 3, // Near Surface
 	4, 5, 6, 
     5, 6, 7, // Far Surface
+}; 
+*/
+
+const GLuint cubeIndices[] = {
+	 0,  1,  2,
+	 1,  2,  3, // TopSurf
+	 4,  5,  6,
+	 5,  6,  7, // BotSurf
+	 8,  9, 10,
+	 9, 10, 11, // LeftSurf
+	12, 13, 14,
+	13, 14, 15, // RightSurf
+	16, 17, 18,
+	17, 18, 19, // FarSurf
+	20, 21, 22, 
+	21, 22, 23  // NearSurf
 };  
 
 // Initiation
@@ -201,16 +246,17 @@ void graphicsDrawCube(struct graphicsConfig * graCon)
 	struct mat4 matScale;
 	struct mat4 matCam;
 	struct mat4 matModel;
-	
-	mat4Perspective(&matProj, graCon->projNear, graCon->projFar, graCon->projWidth, graCon->projHeight);
 
+	mat4Perspective(&matProj, graCon->projNear, graCon->projFar, graCon->projWidth, graCon->projHeight);
 	mat4Eye(&matScale);
+	mat4Eye(&matCam);
+
 	mat4SetScaling(&matScale, graCon->scaleX, graCon->scaleY, graCon->scaleZ);
 	mat4Mult(&graCon->matSerial, &matScale, &matModel);
 
-	mat4Eye(&matCam);
-	mat4SetTranslation(&matCam, graCon->camDist, 0, 0);
+	mat4SetTranslation(&matCam, 0, 0, graCon->camDist);
 	mat4Mult(&matProj, &matCam, &matProj);	
+
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	GLfloat arrayModel[16];

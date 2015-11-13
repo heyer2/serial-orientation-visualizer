@@ -11,8 +11,6 @@
 #define ERR_GLFW "Error: GLFW related error.\n"
 #define INFO_END "\nVisualization over.\n"
 
-
-#define UPDATESPEED_PACKAGE 0.999
 #define UPDATESPEED_FRAME 0.99
 
 #define FRAMERATE_TARGET 60.0
@@ -55,27 +53,36 @@ int main(int argc, char** argv)
     graphicsConfigSetDefault(&graCon);
 	double timerPackage = glfwGetTime();
 	double timerFrame   = glfwGetTime();
-	double intervalPackage  = 0;
+	double timerPool    = glfwGetTime();
+	double freqPackage  = 0;
 	double intervalFrame    = 0;
+	int totalPackages = 0;
+
+	
 
 	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
-		int countPackages = serialUpdate(&serialPort1);
 
-		if (countPackages) {
-			double intervalDiff = timeSince(timerPackage) - intervalPackage;
-			intervalPackage += UPDATESPEED_PACKAGE * intervalDiff / countPackages;
-			timerPackage = glfwGetTime();
+		if (timeSince(timerPool) > 1/10000) {
+			int countPackages = serialUpdate(&serialPort1);
+			timerPool = glfwGetTime();
+			totalPackages += countPackages;
 		}
 
-		if (timeSince(timerPackage) > TIMEOUT_PACKAGE) {
-			intervalPackage += timeSince(timerPackage);
-			timerPackage = glfwGetTime();
+		/*s
+		static double timerDeterminant = glfwGetTime();
+		static int bad = 0;
+		if (timeSince(timerDeterminant) > 60) {
+			timerDeterminant = glfwGetTime();
+			printf("Bad: %i\n", bad / 60.0f);
+			bad = 0;
 		}
+		*/
 
-		printf("Frame: %f Framterval: %f package %f", 1 / intervalFrame, intervalFrame, 1 / intervalPackage);
-		printf("packages yo %i\n", countPackages);
-
+		if (timeSince(timerPackage) > 2) {
+			freqPackage = totalPackages / 2;
+			timerPackage = glfwGetTime();
+			totalPackages = 0;
+		}
 
 		if (timeSince(timerFrame) > 1.0 / FRAMERATE_TARGET) {
 			double intervalDiff = timeSince(timerFrame) - intervalFrame;
@@ -85,10 +92,10 @@ int main(int argc, char** argv)
 			graphicsDrawCube(&graCon);		
 			glfwSwapBuffers(window);
 			serialPort1.flagNewOrientation = 0;
+			printf("Frame: %f package: %f\n\r" , 1 / intervalFrame, freqPackage);
 		}
-
 	}
 	
 	progExit();
-	return 0; // Unneccesary
+	return 0; // Redundant
 }

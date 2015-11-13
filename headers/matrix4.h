@@ -15,4 +15,5 @@ void mat4Disp(struct mat4 * mat, char const * const text);
 void mat4SetScaling(struct mat4 * mat, double x, double y, double z);
 void mat4SetTranslation(struct mat4 * mat, double x, double y, double z);
 void mat4SetRotFromHPR(struct mat4 * mat, double heading, double pitch, double roll);
+double mat4Det(struct mat4 * mat);
 #endif /* MAT4_H */

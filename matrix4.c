@@ -13,7 +13,7 @@ void mat4SetRowMan(int row, struct mat4 * mat, double a, double b, double c, dou
 void mat4Zero(struct mat4 * mat)
 {
 	for (int i = 0; i < 16; i++)
-		*((float*)mat->data + i) = 0;	
+		*((double*)mat->data + i) = 0;	
 }
 
 void mat4Eye(struct mat4 * mat)
@@ -92,18 +92,32 @@ void mat4SetRotFromHPR(struct mat4 * mat, double heading, double pitch, double r
 	mat4SetRowMan(2, &matHead, 0, 0, 1, 0);
 	mat4SetRowMan(3, &matHead, 0, 0, 0, 0);
 	
-	mat4SetRowMan(0, &matPitch, cos(pitch), 0, -sin(pitch), 0);
+	mat4SetRowMan(0, &matPitch, cos(pitch), 0, sin(pitch), 0);
 	mat4SetRowMan(1, &matPitch, 0, 1, 0, 0);
-	mat4SetRowMan(2, &matPitch, sin(pitch), 0, cos(pitch), 0);
+	mat4SetRowMan(2, &matPitch, -sin(pitch), 0, cos(pitch), 0);
 	mat4SetRowMan(3, &matPitch, 0, 0, 0, 0);
 	
 	mat4SetRowMan(0, &matRoll, 1, 0, 0, 0);
-	mat4SetRowMan(1, &matRoll, 0, cos(roll), sin(roll), 0);
-	mat4SetRowMan(2, &matRoll, 0, -sin(roll), cos(roll), 0);
+	mat4SetRowMan(1, &matRoll, 0, cos(roll), -sin(roll), 0);
+	mat4SetRowMan(2, &matRoll, 0, sin(roll), cos(roll), 0);
 	mat4SetRowMan(3, &matRoll, 0, 0, 0, 0);
 	
 	struct mat4 matRot;
 	mat4Mult(&matHead, &matPitch, &matRot);
 	mat4Mult(&matRot, &matRoll, &matRot);
 	*mat = matRot;
+}
+
+double mat4Det(struct mat4 * mat)
+{
+	double result = 0;
+
+	result += mat->data[0][0] * mat->data[1][1] * mat->data[2][2];
+	result += mat->data[0][1] * mat->data[1][2] * mat->data[2][0];
+	result += mat->data[0][2] * mat->data[1][0] * mat->data[2][1];
+	result -= mat->data[0][1] * mat->data[1][0] * mat->data[2][2];
+	result -= mat->data[0][0] * mat->data[1][2] * mat->data[2][1];
+	result -= mat->data[0][2] * mat->data[1][1] * mat->data[2][0];	
+
+	return result;
 }
