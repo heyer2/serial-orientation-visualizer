@@ -5,7 +5,7 @@
 #include "headers/serial.h"
 #include "headers/matrix4.h"
 
-#define TMP_BUFFER_SIZE 1024
+#define TMP_BUFFER_SIZE 32768
 
 #define ERR_ARG "Error: Unknown program input parameter.\n"
 #define ERR_BAUD "Error: Nun-numeric baud rate.\n"
@@ -15,7 +15,7 @@
 
 #define INFO_PORTREADY "Port successfully opened \n"
 
-#define ELEMENTS_HRR 3
+#define ELEMENTS_HPR 3
 #define ELEMENTS_MATRIX 9
 
 #define ELEMENTSIZE_FLOAT 4
@@ -140,7 +140,7 @@ double serialRawToDouble(struct serialPort * serial, void * ptr)
 	switch(serial->numRep) {
 		case floating: return *(float*)ptr;
 		case fixed16 : return *(int16_t*)ptr / 32767.0;
-		case fixed32 : return *(int32_t*)ptr / 2147483647.0;
+		case fixed32 : return *(int32_t*)ptr / 536870912.0; //Q2.29
 	}
 }
 
@@ -155,7 +155,7 @@ void serialMatrixFromPackage(struct serialPort * serial, char * packet)
 
 	int elements;
 	switch(serial->oriRep) {
-		case HPR   : elements = ELEMENTS_HRR;  	break;
+		case HPR   : elements = ELEMENTS_HPR;  	break;
 		case matrix: elements = ELEMENTS_MATRIX;break;
 	}
 
@@ -196,10 +196,10 @@ int serialUpdate(struct serialPort * serial)
 		return 0;
 
 	int packetCount = 0;
+	
 	int packetSize = 1;
-
 	switch(serial->oriRep) {
-		case HPR   : packetSize *= ELEMENTS_HRR;   break;
+		case HPR   : packetSize *= ELEMENTS_HPR;   break;
 		case matrix: packetSize *= ELEMENTS_MATRIX;break;
 	}
 	switch(serial->numRep) {

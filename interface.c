@@ -3,7 +3,9 @@
 #include <glfw/glfw3.h>
 #include "headers/interface.h"
 
-#define WINDOW_NAME "Orientation Visualizer"
+
+#define TITLE_SIZE 120
+
 #define WINDOW_DEF_WIDTH  500
 #define WINDOW_DEF_HEIGHT 500
 
@@ -54,7 +56,7 @@ GLFWwindow* interfaceInitWindow(void)
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_REFRESH_RATE, 100);
-	GLFWwindow* window = glfwCreateWindow(WINDOW_DEF_WIDTH, WINDOW_DEF_HEIGHT, WINDOW_NAME, NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WINDOW_DEF_WIDTH, WINDOW_DEF_HEIGHT, "", NULL, NULL);
 	setCallbacks(window);
 	glfwMakeContextCurrent(window);
 	glewExperimental = GL_TRUE;
@@ -66,4 +68,11 @@ GLFWwindow* interfaceInitWindow(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
 	return window;
+}
+
+void interfaceUpdateTitle(GLFWwindow * window, double frame, double package, double det)
+{	
+	static char title[TITLE_SIZE];
+	sprintf(title, "Frame: % 3.1f Pack: % 4.1f Det % .6f" , frame, package, det);
+	glfwSetWindowTitle(window, title);
 }

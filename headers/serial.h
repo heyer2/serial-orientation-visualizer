@@ -3,7 +3,7 @@
 
 #include "matrix4.h"
 
-#define SERIAL_BUFFER_SIZE 512
+#define SERIAL_BUFFER_SIZE 32768
 
 struct serialPort {
 	int flagDesync;
@@ -16,7 +16,6 @@ struct serialPort {
 	enum oriType {HPR, matrix} oriRep;
 	enum numberType {floating, fixed16, fixed32} numRep;
 };
-
 
 void serialSetBaud(struct serialPort * serial, char * arg);
 void serialSetOrientation(struct serialPort * serial, char * arg);

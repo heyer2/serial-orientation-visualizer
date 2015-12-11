@@ -55,21 +55,7 @@ const GLchar* const fragmentShaderSource =
 	"	color = vec4(fragColor, 1.0f);                                    \n"
 	"}                                                               	  \n";
 	
-// 3D model
-
-/*
-const GLfloat cubeVertices[] = { // x y z, r g b
-    -0.4f, -0.2f, -0.2f,  0.0f,  0.6f,  0.0f, // 0 Near-Bottom-Left
-    -0.4f,  0.2f, -0.2f,  0.0f,  0.6f,  0.0f, // 1 Near-Bottom-Right
-    -0.4f, -0.2f,  0.2f,  1.0f,  0.0f,  0.0f, // 2 Near-Top-Left
-	-0.4f,  0.2f,  0.2f,  1.0f,  0.0f,  0.0f, // 3 Near-Top-Right
-	 0.4f, -0.2f, -0.2f,  0.0f,  0.6f,  0.0f, // 4 Far-Bottom-Left
-     0.4f,  0.2f, -0.2f,  0.0f,  0.6f,  0.0f, // 5 Far-Bottom-Right
-     0.4f, -0.2f,  0.2f,  1.0f,  0.0f,  0.0f, // 6 Far-Top-Left
-	 0.4f,  0.2f,  0.2f,  1.0f,  0.0f,  0.0f  // 7 Far-Top-Right
-};
-*/
-
+// Model
 const GLfloat cubeVertices[] = { // x y z, r g b
     -0.2f, -0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  0 UpperSurf : Top-Near-Left
 	-0.2f,  0.2f,  0.2f,  0.0f,  0.0f,  0.5f, //  1 UpperSurf : Top-Near-Right
@@ -97,23 +83,6 @@ const GLfloat cubeVertices[] = { // x y z, r g b
 	 0.2f,  0.2f,  0.2f,  0.5f,  0.0f,  0.0f  // 23 NearSurf  : Near-Top-Right
 };
 
-/*
-const GLuint cubeIndices[] = {
-	0, 1, 4,
-	1, 4, 5, // Bottom Surface
-	2, 3, 6,
-	3, 6, 7, // Top Surface
-	0, 2, 4,
-	2, 6, 4, // Left Surface
-	1, 5, 3,
-	3, 7, 5, // Right Surface
-	0, 1, 2, 
-    1, 2, 3, // Near Surface
-	4, 5, 6, 
-    5, 6, 7, // Far Surface
-}; 
-*/
-
 const GLuint cubeIndices[] = {
 	 0,  1,  2,
 	 1,  2,  3, // TopSurf
@@ -128,9 +97,6 @@ const GLuint cubeIndices[] = {
 	20, 21, 22, 
 	21, 22, 23  // NearSurf
 };  
-
-// Initiation
-
 	
 GLuint initShaders(void)
 {

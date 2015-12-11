@@ -6,7 +6,6 @@ struct mat4 {
 };
 
 void mat4SetRowMan(int row, struct mat4 * mat, double a, double b, double c, double d);
-
 void mat4Zero(struct mat4 * mat);
 void mat4Eye(struct mat4 * mat);
 void mat4Mult(struct mat4 * matA, struct mat4 * matB, struct mat4 * matOut);

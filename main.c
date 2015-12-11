@@ -12,8 +12,11 @@
 #define INFO_END "\nVisualization over.\n"
 
 #define UPDATESPEED_FRAME 0.99
-
 #define FRAMERATE_TARGET 60.0
+
+#define SERIAL_POOL_INTERVAL (1.0/10000.0)
+#define PACKAGE_SPEED_DISP_INTERVAL 1.0
+
 
 static void progExit(void)
 {
@@ -37,7 +40,6 @@ static double timeSince(double time)
 
 int main(int argc, char** argv)
 {	
-	// Initialization
    if (!glfwInit()) {
     	fputs(ERR_GLFW, stdout);
         exit(EXIT_FAILURE);
@@ -57,30 +59,16 @@ int main(int argc, char** argv)
 	double intervalFrame = 0;
 	int totalPackages = 0;
 
-	
-
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
-
-		if (timeSince(timerPool) > 1.0/10000.0) {
-			int countPackages = serialUpdate(&serialPort1);
+		if (timeSince(timerPool) > SERIAL_POOL_INTERVAL) {
 			timerPool = glfwGetTime();
-			totalPackages += countPackages;
+			totalPackages += serialUpdate(&serialPort1);
 		}
 
-		/*s
-		static double timerDeterminant = glfwGetTime();
-		static int bad = 0;
-		if (timeSince(timerDeterminant) > 60) {
-			timerDeterminant = glfwGetTime();
-			printf("Bad: %i\n", bad / 60.0f);
-			bad = 0;
-		}
-		*/
-
-		if (timeSince(timerPackage) > 2) {
-			freqPackage = totalPackages / 2;
+		if (timeSince(timerPackage) > PACKAGE_SPEED_DISP_INTERVAL) {
+			freqPackage = totalPackages / PACKAGE_SPEED_DISP_INTERVAL;
 			timerPackage = glfwGetTime();
 			totalPackages = 0;
 		}
@@ -93,7 +81,7 @@ int main(int argc, char** argv)
 			graphicsDrawCube(&graCon);		
 			glfwSwapBuffers(window);
 			serialPort1.flagNewOrientation = 0;
-			printf("Frame: %f package: %f\n\r" , 1 / intervalFrame, freqPackage);
+			interfaceUpdateTitle(window, 1.0 / intervalFrame, freqPackage, mat4Det(&serialPort1.matOri));
 		}
 	}
 	
