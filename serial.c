@@ -19,8 +19,8 @@
 #define ELEMENTS_MATRIX 9
 
 #define ELEMENTSIZE_FLOAT 4
-#define ELEMENTSIZE_FIXED16 2
-#define ELEMENTSIZE_FIXED32 4
+#define ELEMENTSIZE_INT16 2
+#define ELEMENTSIZE_INT32 4
 
 int stringIsNumeric(char * str) 
 {
@@ -85,10 +85,12 @@ void serialSetNumber(struct serialPort * serial, char * arg)
 {
 	if (stringIsEqual(arg, "floating"))
 		serial->numRep = floating;
-	else if (stringIsEqual(arg, "fixed16"))
-		serial->numRep = fixed16;
-	else if (stringIsEqual(arg, "fixed32"))
-		serial->numRep = fixed32;
+	else if (stringIsEqual(arg, "b16q15"))
+		serial->numRep = b16q15;
+	else if (stringIsEqual(arg, "b32q29"))
+		serial->numRep = b32q29;
+	else if (stringIsEqual(arg, "b32q31"))
+		serial->numRep = b32q31;
 	else {
 		fputs(ERR_REP, stderr);
 		exit(EXIT_FAILURE);
@@ -139,8 +141,9 @@ double serialRawToDouble(struct serialPort * serial, void * ptr)
 {
 	switch(serial->numRep) {
 		case floating: return *(float*)ptr;
-		case fixed16 : return *(int16_t*)ptr / 32767.0;
-		case fixed32 : return *(int32_t*)ptr / 536870912.0; //Q2.29
+		case b16q15  : return *(int16_t*)ptr / pow(2.0, 15);
+		case b32q29  : return *(int32_t*)ptr / pow(2.0, 29);
+		case b32q31  : return *(int32_t*)ptr / pow(2.0, 31);
 	}
 }
 
@@ -148,15 +151,16 @@ void serialMatrixFromPackage(struct serialPort * serial, char * packet)
 {
 	int elementSize;
 	switch(serial->numRep) {
-		case floating: elementSize = ELEMENTSIZE_FLOAT;  break;
-		case fixed16 : elementSize = ELEMENTSIZE_FIXED16;break;
-		case fixed32 : elementSize = ELEMENTSIZE_FIXED32;break;
+		case floating: elementSize = ELEMENTSIZE_FLOAT;   break;
+		case b16q15  : elementSize = ELEMENTSIZE_INT16; break;
+		case b32q29  : elementSize = ELEMENTSIZE_INT32; break;
+		case b32q31  : elementSize = ELEMENTSIZE_INT32; break;
 	}
 
 	int elements;
 	switch(serial->oriRep) {
-		case HPR   : elements = ELEMENTS_HPR;  	break;
-		case matrix: elements = ELEMENTS_MATRIX;break;
+		case HPR   : elements = ELEMENTS_HPR;  	 break;
+		case matrix: elements = ELEMENTS_MATRIX; break;
 	}
 
 	double packetData[elements];
@@ -199,13 +203,14 @@ int serialUpdate(struct serialPort * serial)
 	
 	int packetSize = 1;
 	switch(serial->oriRep) {
-		case HPR   : packetSize *= ELEMENTS_HPR;   break;
-		case matrix: packetSize *= ELEMENTS_MATRIX;break;
+		case HPR   : packetSize *= ELEMENTS_HPR;    break;
+		case matrix: packetSize *= ELEMENTS_MATRIX; break;
 	}
 	switch(serial->numRep) {
-		case floating: packetSize *= ELEMENTSIZE_FLOAT;  break;
-		case fixed16 : packetSize *= ELEMENTSIZE_FIXED16;break;
-		case fixed32 : packetSize *= ELEMENTSIZE_FIXED32;break;
+		case floating: packetSize *= ELEMENTSIZE_FLOAT; break;
+		case b16q15  : packetSize *= ELEMENTSIZE_INT16; break;
+		case b32q29  : packetSize *= ELEMENTSIZE_INT32; break;
+		case b32q31  : packetSize *= ELEMENTSIZE_INT32; break;
 	}
 
 	char packet[packetSize + 1]; // End of packet marker, newline

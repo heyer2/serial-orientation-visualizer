@@ -14,7 +14,7 @@ struct serialPort {
 	int bufferIdx;
 	char buffer[SERIAL_BUFFER_SIZE];
 	enum oriType {HPR, matrix} oriRep;
-	enum numberType {floating, fixed16, fixed32} numRep;
+	enum numberType {floating, b16q15, b32q29, b32q31} numRep;
 };
 
 void serialSetBaud(struct serialPort * serial, char * arg);
